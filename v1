@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotation Produits</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #008080;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #008080;
+            color: white;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        button:hover {
+            background-color: #006666;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background-color: white;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cotation Produits en FCFA</h1>
+
+    <!-- Champ de recherche -->
+    <input type="text" id="recherche" placeholder="Rechercher un produit..." onkeyup="filtrerProduits()">
+
+    <!-- Sélection de produits -->
+    <div id="produits">
+        <label>Produit: 
+            <select id="produit"></select>
+        </label>
+        <label>Quantité: <input type="number" id="quantite" min="1" value="1"></label>
+        <button onclick="ajouterProduit()">Ajouter</button>
+    </div>
+
+    <h2>Produits sélectionnés</h2>
+    <ul id="liste-produits"></ul>
+
+    <label>Réduction (%): <input type="number" id="reduction" min="0" value="0"></label>
+    <button onclick="calculerTotal()">Calculer Total</button>
+
+    <h3 id="total">Total: 0 FCFA</h3>
+
+    <button onclick="reinitialiserListe()">Réinitialiser la Liste</button>
+    <button onclick="partagerWhatsApp()">Partager sur WhatsApp</button>
+
+    <script>
+        const produits = [
+            { ref: "001", nom: "Pulpe d'Aloès", prix: 20000 },
+            { ref: "002", nom: "Aloe Berry Nectar", prix: 20000 },
+            { ref: "003", nom: "Cœur d'Aloès", prix: 20000 },
+            { ref: "004", nom: "Forever Freedom", prix: 29000 },
+            { ref: "005", nom: "Infusion Fleur d'Aloès", prix: 14000 },
+            { ref: "006", nom: "Forever FAB", prix: 4000 },
+            { ref: "007", nom: "Forever FABX", prix: 4000 }
+        ];
+
+        const selectProduit = document.getElementById('produit');
+        let produitsSelectionnes = [];
+
+        // Ajouter les produits dans la liste déroulante
+        produits.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.prix;
+            option.textContent = `${p.nom} - ${p.prix} FCFA`;
+            selectProduit.appendChild(option);
+        });
+
+        function ajouterProduit() {
+            const produit = selectProduit.options[selectProduit.selectedIndex];
+            const quantite = document.getElementById('quantite').value;
+            const nom = produit.text;
+            const prix = parseFloat(produit.value);
+
+            const produitObj = { nom, prix, quantite: parseInt(quantite) };
+            produitsSelectionnes.push(produitObj);
+            afficherProduits();
+        }
+
+        function afficherProduits() {
+            const liste = document.getElementById('liste-produits');
+            liste.innerHTML = '';
+
+            produitsSelectionnes.forEach((p, index) => {
+                liste.innerHTML += `
+                    <li>
+                        ${p.nom} x ${p.quantite} - ${p.prix * p.quantite} FCFA
+                        <button onclick="supprimerProduit(${index})">Supprimer</button>
+                    </li>`;
+            });
+        }
+
+        function supprimerProduit(index) {
+            produitsSelectionnes.splice(index, 1);
+            afficherProduits();
+            calculerTotal();
+        }
+
+        function calculerTotal() {
+            const reduction = parseFloat(document.getElementById('reduction').value) || 0;
+            let total = produitsSelectionnes.reduce((acc, p) => acc + p.prix * p.quantite, 0);
+            total -= total * (reduction / 100);
+            document.getElementById('total').textContent = `Total: ${total.toFixed(2)} FCFA`;
+        }
+
+        function reinitialiserListe() {
+            produitsSelectionnes = [];
+            afficherProduits();
+            calculerTotal();
+        }
+
+        function filtrerProduits() {
+            const recherche = document.getElementById('recherche').value.toLowerCase();
+            selectProduit.innerHTML = '';
+            produits
+                .filter(p => p.nom.toLowerCase().includes(recherche))
+                .forEach(p => {
+                    const option = document.createElement('option');
+                    option.value = p.prix;
+                    option.textContent = `${p.nom} - ${p.prix} FCFA`;
+                    selectProduit.appendChild(option);
+                });
+        }
+
+        function partagerWhatsApp() {
+            let message = "Liste des produits sélectionnés:\n";
+            produitsSelectionnes.forEach(p => {
+                message += `${p.nom} x ${p.quantite} - ${p.prix * p.quantite} FCFA\n`;
+            });
+
+            const reduction = parseFloat(document.getElementById('reduction').value) || 0;
+            let total = produitsSelectionnes.reduce((acc, p) => acc + p.prix * p.quantite, 0);
+            total -= total * (reduction / 100);
+            message += `Total: ${total.toFixed(2)} FCFA`;
+
+            const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>
